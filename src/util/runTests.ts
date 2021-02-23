@@ -39,14 +39,14 @@ export default async function runTests(options: TestRunOptions, cb: Callback): P
 
   let stopMoreTest = false;
   for (let i = 0; i < tests.length; i++) {
-    if ( stopMoreTest ) break;
+    if (stopMoreTest) break;
     const test = tests[i];
 
     console.log(`runTests : test:${i + 1} of ${tests.length}`);
     // debugger
     const maybePromise: any = test(args!, function finishTestRun(err) {
-      console.log(`finishTestRun : test:${i + 1 } of ${tests.length} endEarly:${endEarly}`);
-    if (err) {
+      console.log(`finishTestRun : test:${i + 1} of ${tests.length} endEarly:${endEarly}`);
+      if (err) {
         // always return early for non validation errors
         if (!ValidationError.isError(err)) {
           return callback(err, value);
@@ -78,11 +78,11 @@ export default async function runTests(options: TestRunOptions, cb: Callback): P
     });
 
     debugger
-    if ( maybePromise && maybePromise.then) {
+    if (maybePromise && maybePromise.then) {
       try {
         await maybePromise;
       } catch (err) {
-        cb( err )
+        cb(err)
       }
     }
   }
