@@ -27,11 +27,13 @@ export type TestContext<TContext = {}> = {
   createError: (params?: CreateErrorOptions) => ValidationError;
 };
 
-export type TestFunction<T = unknown, TContext = {}> = (
+export type TestFunctionWas<T = unknown, TContext = {}> = (
   this: TestContext<TContext>,
   value: T,
   context: TestContext<TContext>,
 ) => boolean | ValidationError | Promise<boolean | ValidationError>;
+
+export type TestFunction<T = unknown, TContext = {}> = TestFunctionWas<T, TContext> & { async?: boolean };
 
 export type TestOptions<TSchema extends AnySchema = AnySchema> = {
   value: any;
@@ -76,6 +78,8 @@ export default function createValidation(config: {
     const { name, test, params, message } = config;
     let { parent, context } = options;
 
+    console.log(`validate,`, name);
+
     function resolve<T>(item: T | Reference<T>) {
       return Ref.isRef(item) ? item.getValue(value, parent, context) : item;
     }
@@ -114,21 +118,31 @@ export default function createValidation(config: {
       ...rest,
     };
 
-    if (!sync) {
-      try {
-        Promise.resolve(test.call(ctx, value, ctx)).then((validOrError) => {
-          if (ValidationError.isError(validOrError)) cb(validOrError);
-          else if (!validOrError) cb(createError());
-          else cb(null, validOrError);
-        });
-      } catch (err) {
-        cb(err);
-      }
-
-      return;
-    }
+    console.log(`validation func : test: ${name}  async: ${test.async}`);
 
     let result;
+    if (test.async) {
+        try {
+            result = test.call(ctx, value, ctx);
+            if (result instanceof Promise ) {
+                result.then((validOrError) => {
+                    if (ValidationError.isError(validOrError)) cb(validOrError);
+                    else if (!validOrError) cb(createError());
+                    else cb(null, validOrError);
+                }).catch((err) => {
+                    console.log(`in createValidation : caught test error`, err);
+                    cb(err);
+                });
+                return result;
+            } else {
+                throw new Error("Async function did not return a Promise!")
+            }
+        } catch (err) {
+            cb(err);
+        }
+        return;
+    }
+
     try {
       result = test.call(ctx, value, ctx);
 

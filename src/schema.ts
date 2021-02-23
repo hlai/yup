@@ -377,7 +377,8 @@ export default abstract class BaseSchema<
       sync,
       from,
     };
-
+    
+    console.log(`schema : _validate,`, path);
     let initialTests = [];
 
     if (this._typeError) initialTests.push(this._typeError);
@@ -420,6 +421,7 @@ export default abstract class BaseSchema<
     options?: ValidateOptions<TContext>,
     maybeCb?: Callback,
   ) {
+    console.log(`schema : validate,`);
     let schema = this.resolve({ ...options, value });
 
     // callback case is for nested validations

@@ -1,48 +1,37 @@
 import ValidationError from '../ValidationError';
-import { TestOptions } from './createValidation';
-import { Callback } from '../types';
 
-export type RunTest = (opts: TestOptions, cb: Callback) => void;
-
-export type TestRunOptions = {
-  endEarly?: boolean;
-  tests: RunTest[];
-  args?: TestOptions;
-  errors?: ValidationError[];
-  sort?: (a: ValidationError, b: ValidationError) => number;
-  path?: string;
-  value: any;
-  sync?: boolean;
-};
-
-const once = <T extends (...args: any[]) => any>(cb: T) => {
+const once = cb => {
   let fired = false;
-  return (...args: Parameters<T>) => {
+  return (...args) => {
     if (fired) return;
     fired = true;
     cb(...args);
   };
 };
 
-export default function runTests(options: TestRunOptions, cb: Callback): void {
-  let { endEarly, tests, args, value, errors, sort, path } = options;
-
+export default function runTests(options, cb) {
+  let {
+    endEarly,
+    tests,
+    args,
+    value,
+    errors,
+    sort,
+    path
+  } = options;
   let callback = once(cb);
   let count = tests.length;
-  const nestedErrors = [] as ValidationError[];
+  const nestedErrors = [];
   errors = errors ? errors : [];
-
-  if (!count)
-    return errors.length
-      ? callback(new ValidationError(errors, value, path))
-      : callback(null, value);
-
+  if (!count) return errors.length ? callback(new ValidationError(errors, value, path)) : callback(null, value);
   let moreTests = true;
-  function doTest( i : number) {
+
+  function doTest(i) {
     const test = tests[i];
     console.log(`runTests : test:${i + 1} of ${tests.length}`);
-    let maybePromise: any = test(args!, function finishTestRun(err) {
+    let maybePromise = test(args, function finishTestRun(err) {
       console.log(`finishTestRun : test:${i + 1} of ${tests.length} endEarly:${endEarly}`);
+
       if (err) {
         // always return early for non validation errors
         if (!ValidationError.isError(err)) {
@@ -74,7 +63,6 @@ export default function runTests(options: TestRunOptions, cb: Callback): void {
 
         callback(null, value);
       }
-
     });
 
     if (!moreTests) {
@@ -83,10 +71,10 @@ export default function runTests(options: TestRunOptions, cb: Callback): void {
 
     if (maybePromise && maybePromise.then) {
       maybePromise.then(() => {
-        if (moreTests && (++i < tests.length)) {
+        if (moreTests && ++i < tests.length) {
           doTest(i);
         }
-      }).catch((err: Error) => {
+      }).catch(err => {
         moreTests = false;
         cb(err);
       });
@@ -95,9 +83,7 @@ export default function runTests(options: TestRunOptions, cb: Callback): void {
         doTest(i);
       }
     }
-
   }
 
   doTest(0);
-
 }
