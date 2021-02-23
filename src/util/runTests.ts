@@ -41,7 +41,7 @@ export default function runTests(options: TestRunOptions, cb: Callback): void {
   function doTest( i : number) {
     const test = tests[i];
     console.log(`runTests : test:${i + 1} of ${tests.length}`);
-    let maybePromise: any = test(args, function finishTestRun(err) {
+    let maybePromise: any = test(args!, function finishTestRun(err) {
       console.log(`finishTestRun : test:${i + 1} of ${tests.length} endEarly:${endEarly}`);
       if (err) {
         // always return early for non validation errors
@@ -63,11 +63,11 @@ export default function runTests(options: TestRunOptions, cb: Callback): void {
         if (nestedErrors.length) {
           if (sort) nestedErrors.sort(sort); //show parent errors after the nested ones: name.first, name
 
-          if (errors.length) nestedErrors.push(...errors);
+          if (errors && errors.length) nestedErrors.push(...errors);
           errors = nestedErrors;
         }
 
-        if (errors.length) {
+        if (errors && errors.length) {
           callback(new ValidationError(errors, value, path), value);
           return;
         }
@@ -86,7 +86,7 @@ export default function runTests(options: TestRunOptions, cb: Callback): void {
         if (moreTests && (++i < tests.length)) {
           doTest(i);
         }
-      }).catch((err) => {
+      }).catch((err: Error) => {
         moreTests = false;
         cb(err);
       });
