@@ -37,67 +37,67 @@ export default function runTests(options: TestRunOptions, cb: Callback): void {
       ? callback(new ValidationError(errors, value, path))
       : callback(null, value);
 
-  let stopMoreTest = false;
-  function doTest(i) {
+  let moreTests = true;
+  function doTest( i : number) {
     const test = tests[i];
     console.log(`runTests : test:${i + 1} of ${tests.length}`);
     let maybePromise: any = test(args, function finishTestRun(err) {
-        console.log(`finishTestRun : test:${i + 1} of ${tests.length} endEarly:${endEarly}`);
-        if (err) {
-            // always return early for non validation errors
-            if (!ValidationError.isError(err)) {
-                return callback(err, value);
-            }
-
-            if (endEarly) {
-                err.value = value;
-                debugger
-                stopMoreTest = true;
-                return callback(err, value);
-            }
-
-            nestedErrors.push(err);
+      console.log(`finishTestRun : test:${i + 1} of ${tests.length} endEarly:${endEarly}`);
+      if (err) {
+        // always return early for non validation errors
+        if (!ValidationError.isError(err)) {
+          moreTests = false;
+          return callback(err, value);
         }
 
-        if (--count <= 0) {
-            if (nestedErrors.length) {
-                if (sort) nestedErrors.sort(sort); //show parent errors after the nested ones: name.first, name
-
-                if (errors.length) nestedErrors.push(...errors);
-                errors = nestedErrors;
-            }
-
-            if (errors.length) {
-                callback(new ValidationError(errors, value, path), value);
-                return;
-            }
-
-            callback(null, value);
+        if (endEarly) {
+          err.value = value;
+          moreTests = false;
+          return callback(err, value);
         }
+
+        nestedErrors.push(err);
+      }
+
+      if (--count <= 0) {
+        if (nestedErrors.length) {
+          if (sort) nestedErrors.sort(sort); //show parent errors after the nested ones: name.first, name
+
+          if (errors.length) nestedErrors.push(...errors);
+          errors = nestedErrors;
+        }
+
+        if (errors.length) {
+          callback(new ValidationError(errors, value, path), value);
+          return;
+        }
+
+        callback(null, value);
+      }
 
     });
 
-    if (stopMoreTest) {
-        return;
+    if (!moreTests) {
+      return;
     }
 
-    if (!(maybePromise && maybePromise.then)) {
-        if (++i < tests.length) {
-            doTest(i);
-        }
-    }
     if (maybePromise && maybePromise.then) {
-        maybePromise.then(() => {
-            if (!stopMoreTest && (++i < tests.length) ) {
-                doTest(i);
-            }
-        }).catch((err) => {
-            cb(err);
-        });
+      maybePromise.then(() => {
+        if (moreTests && (++i < tests.length)) {
+          doTest(i);
+        }
+      }).catch((err) => {
+        moreTests = false;
+        cb(err);
+      });
+    } else {
+      if (++i < tests.length) {
+        doTest(i);
+      }
     }
 
-}
+  }
 
-doTest(0);
+  doTest(0);
 
 }
