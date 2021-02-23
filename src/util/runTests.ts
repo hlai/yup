@@ -24,7 +24,7 @@ const once = <T extends (...args: any[]) => any>(cb: T) => {
   };
 };
 
-export default function runTests(options: TestRunOptions, cb: Callback): void {
+export default async function runTests(options: TestRunOptions, cb: Callback): Promise<void> {
   let { endEarly, tests, args, value, errors, sort, path } = options;
 
   let callback = once(cb);
@@ -37,17 +37,23 @@ export default function runTests(options: TestRunOptions, cb: Callback): void {
       ? callback(new ValidationError(errors, value, path))
       : callback(null, value);
 
+  let stopMoreTest = false;
   for (let i = 0; i < tests.length; i++) {
+    if ( stopMoreTest ) break;
     const test = tests[i];
 
-    test(args!, function finishTestRun(err) {
-      if (err) {
+    console.log(`runTests : test:${i + 1} of ${tests.length}`);
+    // debugger
+    const maybePromise: any = test(args!, function finishTestRun(err) {
+      console.log(`finishTestRun : test:${i + 1 } of ${tests.length} endEarly:${endEarly}`);
+    if (err) {
         // always return early for non validation errors
         if (!ValidationError.isError(err)) {
           return callback(err, value);
         }
         if (endEarly) {
           err.value = value;
+          stopMoreTest = true;
           return callback(err, value);
         }
         nestedErrors.push(err);
@@ -70,5 +76,14 @@ export default function runTests(options: TestRunOptions, cb: Callback): void {
         callback(null, value);
       }
     });
+
+    debugger
+    if ( maybePromise && maybePromise.then) {
+      try {
+        await maybePromise;
+      } catch (err) {
+        cb( err )
+      }
+    }
   }
 }
