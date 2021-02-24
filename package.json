@@ -1,6 +1,6 @@
 {
-  "name": "yup",
-  "version": "0.32.10",
+  "name": "sage-yup",
+  "version": "0.01.0",
   "description": "Dead simple Object schema validation",
   "main": "lib/index.js",
   "module": "es/index.js",
