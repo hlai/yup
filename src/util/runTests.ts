@@ -1,3 +1,4 @@
+const DEBUG=false;
 import ValidationError from '../ValidationError';
 import { TestOptions } from './createValidation';
 import { Callback } from '../types';
@@ -24,6 +25,7 @@ const once = <T extends (...args: any[]) => any>(cb: T) => {
   };
 };
 
+
 export default function runTests(options: TestRunOptions, cb: Callback): void {
   let { endEarly, tests, args, value, errors, sort, path } = options;
 
@@ -40,9 +42,9 @@ export default function runTests(options: TestRunOptions, cb: Callback): void {
   let moreTests = true;
   function doTest( i : number) {
     const test = tests[i];
-    console.log(`runTests : test:${i + 1} of ${tests.length}`);
+    DEBUG && console.log(`runTests : test:${i + 1} of ${tests.length}`);
     let maybePromise: any = test(args!, function finishTestRun(err) {
-      console.log(`finishTestRun : test:${i + 1} of ${tests.length} endEarly:${endEarly}`);
+      DEBUG && console.log(`finishTestRun : test:${i + 1} of ${tests.length} endEarly:${endEarly}`);
       if (err) {
         // always return early for non validation errors
         if (!ValidationError.isError(err)) {

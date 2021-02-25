@@ -1,3 +1,4 @@
+const DEBUG=false;
 import mapValues from 'lodash/mapValues';
 import ValidationError from '../ValidationError';
 import Ref from '../Reference';
@@ -78,7 +79,7 @@ export default function createValidation(config: {
     const { name, test, params, message } = config;
     let { parent, context } = options;
 
-    console.log(`validate,`, name);
+    DEBUG && console.log(`validate,`, name);
 
     function resolve<T>(item: T | Reference<T>) {
       return Ref.isRef(item) ? item.getValue(value, parent, context) : item;
@@ -118,7 +119,7 @@ export default function createValidation(config: {
       ...rest,
     };
 
-    console.log(`validation func : test: ${name}  async: ${test.async}`);
+    DEBUG && console.log(`validation func : test: ${name}  async: ${test.async}`);
 
     let result;
     if (test.async) {
@@ -130,7 +131,7 @@ export default function createValidation(config: {
                     else if (!validOrError) cb(createError());
                     else cb(null, validOrError);
                 }).catch((err) => {
-                    console.log(`in createValidation : caught test error`, err);
+                  DEBUG && console.log(`in createValidation : caught test error`, err);
                     cb(err);
                 });
                 return result;
