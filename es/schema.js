@@ -1,6 +1,7 @@
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
-// @ts-ignore
+const DEBUG = false; // @ts-ignore
+
 import cloneDeep from 'nanoclone';
 import { mixed as locale } from './locale';
 import Condition from './Condition';
@@ -213,7 +214,7 @@ export default class BaseSchema {
       sync,
       from
     };
-    console.log(`schema : _validate,`, path);
+    DEBUG && console.log(`schema : _validate,`, path);
     let initialTests = [];
     if (this._typeError) initialTests.push(this._typeError);
     if (this._whitelistError) initialTests.push(this._whitelistError);
@@ -239,7 +240,7 @@ export default class BaseSchema {
   }
 
   validate(value, options, maybeCb) {
-    console.log(`schema : validate,`);
+    DEBUG && console.log(`schema : validate,`);
     let schema = this.resolve(_extends({}, options, {
       value
     })); // callback case is for nested validations

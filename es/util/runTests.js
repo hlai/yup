@@ -1,3 +1,4 @@
+const DEBUG = false;
 import ValidationError from '../ValidationError';
 
 const once = cb => {
@@ -28,9 +29,9 @@ export default function runTests(options, cb) {
 
   function doTest(i) {
     const test = tests[i];
-    console.log(`runTests : test:${i + 1} of ${tests.length}`);
+    DEBUG && console.log(`runTests : test:${i + 1} of ${tests.length}`);
     let maybePromise = test(args, function finishTestRun(err) {
-      console.log(`finishTestRun : test:${i + 1} of ${tests.length} endEarly:${endEarly}`);
+      DEBUG && console.log(`finishTestRun : test:${i + 1} of ${tests.length} endEarly:${endEarly}`);
 
       if (err) {
         // always return early for non validation errors
